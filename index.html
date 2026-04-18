@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediSense AI — Early Disease Prediction Using Minimal Symptoms</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --primary: #050a18;
+    --primary-light: #2558b8;
+    --primary-pale: #2aa8a2;
+    --blue: #1a4fa0;
+    --blue-light: #1e208a;
+    --blue-pale: #e8f0fc;
+    --accent: #7577c7;
+    --calm: #262d91;
+    --calm-pale: #f0faf6;
+    --text: #181b20;
+    --text-muted: #090a0a;
+    --text-light: #080808;
+    --border: #e2e8f0;
+    --bg: #f7fafc;
+    --white: #ffffff;
+    --card-shadow: 0 2px 16px rgba(70, 13, 175, 0.08), 0 1px 4px rgba(0,0,0,0.04);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --attention: #d97706;
+    --attention-pale: #fffbeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  h1,h2,h3,h4 { font-family: 'DM Serif Display', serif; }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 999;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--text);
+  }
+  .nav-brand .logo-icon {
+    width: 38px; height: 38px; background: linear-gradient(135deg, var(--primary), var(--blue));
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 18px;
+  }
+  .nav-brand .brand-text { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; display: block; margin-top: -4px; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    color: var(--text-muted); text-decoration: none; padding: 6px 14px;
+    border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s;
+  }
+  .nav-links a:hover { background: var(--primary-pale); color: var(--primary); }
+  .nav-lang select {
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    padding: 6px 10px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-cta-btn {
+    background: linear-gradient(135deg, var(--primary), var(--blue)); color: white; border: none;
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .nav-cta-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .hamburger { display: none; background: none; border: none; cursor: pointer; font-size: 22px; color: var(--text); }
+
+  /* ── GENTLE ALERT BANNER (replaces alarming emergency banner) ── */
+  #care-banner {
+    display: none; background: linear-gradient(135deg, #2d065a, #0f4494);
+    color: white; padding: 18px 2rem;
+    animation: slideDown 0.4s ease-out;
+  }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+  .care-inner {
+    max-width: 960px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+  }
+  .care-text { display: flex; align-items: flex-start; gap: 14px; }
+  .care-icon { font-size: 26px; }
+  .care-title { font-family: 'DM Serif Display', serif; font-size: 17px; margin-bottom: 3px; }
+  .care-sub { font-size: 13px; opacity: 0.85; }
+  .care-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .care-btn {
+    padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    cursor: pointer; border: none; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-call-care { background: white; color: var(--primary); }
+  .btn-call-care:hover { background: #f0faf6; transform: scale(1.02); }
+  .btn-hospital-care { background: rgba(152, 193, 216, 0.18); color: white; border: 1px solid rgba(255,255,255,0.4); }
+  .btn-hospital-care:hover { background: rgba(255,255,255,0.28); }
+  .btn-consult-care { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.3); }
+  .btn-consult-care:hover { background: rgba(255,255,255,0.22); }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #21bcd4 0%, #7e7fc7 40%, #74b3e7 100%);
+    color: rgb(255, 255, 255); padding: 80px 2rem 100px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 24px;
+    backdrop-filter: blur(4px);
+  }
+  .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #3de290; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.2)} }
+  .hero h1 { font-size: clamp(30px, 5vw, 56px); line-height: 1.15; margin-bottom: 20px; font-style: italic; }
+  .hero h1 span { color: #ffffff; font-style: normal; }
+  .hero p { font-size: 17px; opacity: 0.85; max-width: 580px; margin: 0 auto 36px; line-height: 1.7; }
+  .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary-hero {
+    background: white; color: var(--primary); padding: 14px 28px;
+    border-radius: var(--radius-sm); font-weight: 600; font-size: 15px;
+    text-decoration: none; border: none; cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary-hero:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+  .btn-outline-hero {
+    background: transparent; color: white; padding: 14px 28px;
+    border-radius: var(--radius-sm); font-weight: 500; font-size: 15px;
+    text-decoration: none; border: 1px solid rgba(255,255,255,0.4);
+    cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-outline-hero:hover { background: rgba(255,255,255,0.12); }
+  .hero-stats {
+    display: flex; justify-content: center; gap: 48px; margin-top: 60px;
+    flex-wrap: wrap; position: relative; z-index: 1;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat .num { font-family: 'DM Serif Display', serif; font-size: 32px; }
+  .hero-stat .lbl { font-size: 12px; opacity: 0.7; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ── SECTIONS ── */
+  section { padding: 72px 2rem; }
+  .section-label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--primary); font-weight: 600; margin-bottom: 10px;
+  }
+  .section-title { font-size: clamp(26px, 4vw, 38px); color: var(--text); margin-bottom: 12px; }
+  .section-desc { color: var(--text-muted); max-width: 560px; font-size: 15px; line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* ── SYMPTOM INPUT ── */
+  #predict { background: rgb(170, 208, 211); }
+  .symptom-card {
+    background: rgb(251, 253, 253); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 40px;
+    box-shadow: var(--card-shadow); max-width: 760px; margin: 0 auto;
+  }
+  .input-group { position: relative; margin-bottom: 16px; }
+  .symptom-input {
+    width: 100%; padding: 14px 48px 14px 48px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 15px; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; background: var(--bg); color: var(--text); outline: none;
+  }
+  .symptom-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(129, 180, 160, 0.1); }
+  .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+  .voice-btn {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--text-muted);
+    font-size: 18px; padding: 4px; transition: color 0.2s;
+  }
+  .voice-btn:hover { color: var(--primary); }
+  .voice-btn.listening { color: #d38484; animation: pulse 1s infinite; }
+  .autocomplete-list {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+    background: white; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    max-height: 200px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+  .autocomplete-list li {
+    padding: 10px 16px; cursor: pointer; font-size: 14px;
+    transition: background 0.15s; list-style: none; display: flex; align-items: center; gap: 10px;
+  }
+  .autocomplete-list li:hover { background: var(--primary-pale); color: var(--primary); }
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; min-height: 36px; }
+  .tag {
+    background: var(--primary-pale); color: var(--primary);
+    padding: 6px 12px 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px; cursor: default;
+    animation: tagIn 0.2s ease-out;
+  }
+  @keyframes tagIn { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+  .tag-remove {
+    background: none; border: none; cursor: pointer; color: var(--primary);
+    font-size: 16px; line-height: 1; padding: 0; opacity: 0.6;
+  }
+  .tag-remove:hover { opacity: 1; }
+  .predict-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 24px; }
+  .btn-predict {
+    background: linear-gradient(135deg, var(--primary), var(--blue));
+    color: white; border: none; padding: 14px 32px; border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 10px;
+  }
+  .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,107,74,0.3); }
+  .btn-predict:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-clear {
+    background: none; border: 1px solid var(--border); color: var(--text-muted);
+    padding: 14px 20px; border-radius: var(--radius-sm); font-size: 14px;
+    cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-clear:hover { border-color: var(--text-muted); color: var(--text); }
+  .symptom-hint { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
+
+  /* ── LOADING ── */
+  #loading { display: none; text-align: center; padding: 48px 0; }
+  .loader-ring {
+    width: 56px; height: 56px; border: 3px solid var(--border);
+    border-top-color: var(--primary); border-radius: 50%; margin: 0 auto 16px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-text { color: var(--text-muted); font-size: 15px; }
+  .loading-step { font-size: 13px; color: var(--text-light); margin-top: 8px; transition: all 0.3s; }
+
+  /* ── RESULTS ── */
+  #results { display: none; background: var(--bg); }
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+  }
+  .results-meta { font-size: 14px; color: var(--text-muted); }
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 20px; }
+
+  /* Disease card — calm design, no alarming colors for high risk */
+  .disease-card {
+    background: white; border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: all 0.25s; animation: cardIn 0.4s ease-out backwards;
+    box-shadow: var(--card-shadow);
+  }
+  @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .disease-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(26,107,74,0.12); }
+  .card-header {
+    padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .disease-icon {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .card-title { flex: 1; }
+  .card-title h3 { font-size: 17px; color: var(--text); margin-bottom: 6px; font-family: 'DM Serif Display', serif; }
+
+  /* Calm match badges — no alarming language */
+  .match-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .match-close { background: #dcfce7; color: #166534; }
+  .match-possible { background: #fef9c3; color: #78350f; }
+  .match-unlikely { background: #f0f9ff; color: #0c4a6e; }
+  /* Attention strip for conditions needing care */
+  .card-attention {
+    background: linear-gradient(90deg, #fffbeb, #fef3c7);
+    border-left: 3px solid var(--attention);
+    padding: 10px 16px; margin: 0; font-size: 13px; color: #78350f;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .card-body { padding: 14px 20px; }
+  .card-body p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
+  .info-row {
+    display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;
+    font-size: 13px; color: var(--text-muted);
+  }
+  .info-row i { color: var(--primary); margin-top: 2px; font-size: 12px; }
+  .card-tabs {
+    display: flex; border-top: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .card-tab {
+    flex: 1; padding: 10px 8px; font-size: 12px; font-weight: 600;
+    text-align: center; cursor: pointer; color: var(--text-muted);
+    background: var(--bg); border: none; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif; border-top: 2px solid transparent;
+  }
+  .card-tab.active { background: white; color: var(--primary); border-top-color: var(--primary); }
+  .card-tab-content { padding: 16px 20px; display: none; }
+  .card-tab-content.active { display: block; }
+  .remedy-item {
+    display: flex; gap: 10px; margin-bottom: 10px;
+    font-size: 13px; color: var(--text-muted); align-items: flex-start;
+  }
+  .remedy-icon { font-size: 16px; flex-shrink: 0; }
+  .disclaimer-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--attention-pale); border: 1px solid #fde68a;
+    color: var(--attention); padding: 5px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600; margin-top: 8px;
+  }
+
+  /* Hospital CTA in card */
+  .hospital-cta {
+    margin: 12px 20px; padding: 12px 16px;
+    background: var(--calm-pale); border: 1px solid #a7f3d0; border-radius: 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  }
+  .hospital-cta p { font-size: 13px; color: var(--calm); margin: 0; }
+  .hospital-cta-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-sm-hospital {
+    padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: none; display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-sm-map { background: var(--primary); color: white; }
+  .btn-sm-map:hover { background: var(--primary-light); }
+  .btn-sm-call { background: white; color: var(--primary); border: 1px solid var(--primary); }
+  .btn-sm-call:hover { background: var(--primary-pale); }
+
+  /* ── AYURVEDIC SECTION ── */
+  #ayurvedic { background: linear-gradient(135deg, #f0fdf4, #eff6ff); }
+  .ayur-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 40px; }
+  .ayur-card {
+    background: white; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; transition: all 0.25s; box-shadow: var(--card-shadow);
+  }
+  .ayur-card:hover { transform: translateY(-3px); }
+  .ayur-emoji { font-size: 32px; margin-bottom: 12px; }
+  .ayur-card h4 { font-size: 16px; margin-bottom: 6px; color: var(--primary); }
+  .ayur-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── EMERGENCY CARE SECTION ── */
+  #emergency-care { background: white; }
+  .emergency-care-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 36px; }
+  .ecare-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--card-shadow);
+    border-top: 3px solid var(--primary);
+  }
+  .ecare-icon { font-size: 28px; margin-bottom: 12px; }
+  .ecare-card h4 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+  .ecare-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
+  .ecare-steps { list-style: none; }
+  .ecare-steps li { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  .ecare-steps li::before { content: '•'; color: var(--primary); font-weight: bold; flex-shrink: 0; }
+
+  /* ── REFERENCES ── */
+  #references { background: var(--bg); }
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; margin-top: 36px; }
+  .ref-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; text-align: center; transition: all 0.2s;
+    text-decoration: none; color: var(--text); display: block;
+    background: rgb(242, 244, 245); box-shadow: var(--card-shadow);
+  }
+  .ref-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .ref-logo { font-size: 28px; margin-bottom: 10px; }
+  .ref-card h4 { font-size: 15px; color: var(--text); margin-bottom: 6px; }
+  .ref-card p { font-size: 12px; color: var(--text-muted); }
+
+  /* ── HOW IT WORKS ── */
+  #how { background: var(--bg); }
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; margin-top: 40px; }
+  .step-card {
+    text-align: center; background: rgb(255, 255, 255); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 32px 20px; transition: all 0.25s;
+    box-shadow: var(--card-shadow);
+  }
+  .step-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(26,107,74,0.12); }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-pale), var(--blue-pale));
+    border: 2px solid var(--border); margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--primary);
+  }
+  .step-icon { font-size: 28px; margin-bottom: 12px; }
+  .step-card h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+  .step-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #0f1a2e; color: rgba(255,255,255,0.8);
+    padding: 56px 2rem 32px;
+  }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; max-width: 1100px; margin: 0 auto 40px; }
+  .footer-brand .nav-brand { color: white; }
+  .footer-brand .brand-sub { color: rgba(255,255,255,0.4); }
+  .footer-brand p { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 12px; line-height: 1.7; }
+  .footer-col h4 { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 16px; font-family: 'DM Sans', sans-serif; }
+  .footer-col a { display: block; color: rgba(255,255,255,0.65); text-decoration: none; font-size: 14px; margin-bottom: 10px; transition: color 0.2s; }
+  .footer-col a:hover { color: var(--accent); }
+  .footer-bottom {
+    max-width: 1100px; margin: 0 auto; padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+  }
+  .footer-disclaimer { font-size: 12px; color: rgba(255,255,255,0.35); max-width: 600px; line-height: 1.6; }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.35); }
+
+  /* ── MISC ── */
+  .safe-disclaimer {
+    background: var(--blue-pale); border: 1px solid #bfdbfe;
+    border-radius: var(--radius-sm); padding: 14px 18px; margin-top: 20px;
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 13px; color: #1e3a5f;
+  }
+  .safe-disclaimer i { color: var(--blue-light); margin-top: 1px; }
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--primary-pale); color: var(--primary);
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    border: 1px solid #a7f3d0; margin-bottom: 16px;
+  }
+
+  [data-lang-key] { transition: opacity 0.2s; }
+
+  @media (max-width: 768px) {
+    .nav-links, .nav-lang { display: none; }
+    .hamburger { display: block; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .hero { padding: 52px 1.5rem 64px; }
+    section { padding: 48px 1.5rem; }
+    .symptom-card { padding: 24px; }
+    .hero-stats { gap: 28px; }
+    .care-inner { flex-direction: column; }
+  }
+  @media (max-width: 480px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Gentle Care Banner (replaces alarming emergency banner) -->
+<div id="care-banner">
+  <div class="care-inner">
+    <div class="care-text">
+      <span class="care-icon">🩺</span>
+      <div>
+        <div class="care-title" data-lang-key="care_title">Some of your symptoms may need medical attention</div>
+        <div class="care-sub" data-lang-key="care_sub">We recommend connecting with a healthcare professional soon. You're not alone — help is close by.</div>
+      </div>
+    </div>
+    <div class="care-actions">
+      <button class="care-btn btn-call-care" onclick="callEmergency()">
+        <i class="fas fa-phone"></i> <span data-lang-key="call_btn">Call 112</span>
+      </button>
+      <button class="care-btn btn-hospital-care" onclick="findHospital()">
+        <i class="fas fa-hospital"></i> <span data-lang-key="hospital_btn">Nearby Hospitals</span>
+      </button>
+      <button class="care-btn btn-consult-care" onclick="findDoctor()">
+        <i class="fas fa-user-md"></i> <span data-lang-key="consult_btn">Consult a Doctor</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation -->
+<nav>
+  <a href="#" class="nav-brand">
+    <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+    <div>
+      <span class="brand-text">AI based Early prediction</span>
+      <!-- <span class="brand-sub">Early Disease Prediction</span> -->
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="#predict" data-lang-key="nav_predict">Predict</a>
+    <a href="#how" data-lang-key="nav_how">How It Works</a>
+    <a href="#ayurvedic" data-lang-key="nav_ayur">Ayurvedic</a>
+    <a href="#emergency-care" data-lang-key="nav_emergency">Emergency Care</a>
+    <a href="#references" data-lang-key="nav_ref">References</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-lang">
+      <select id="lang-select" onchange="changeLanguage(this.value)">
+        <option value="en">🇬🇧 English</option>
+        <option value="hi">🇮🇳 हिन्दी</option>
+        <option value="mr">🇮🇳 मराठी</option>
+      </select>
+    </div>
+    <a href="#predict" class="nav-cta-btn">
+      <i class="fas fa-stethoscope"></i> <span data-lang-key="nav_check">Check Symptoms</span>
+    </a>
+    <button class="hamburger" onclick="toggleNav()">☰</button>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero" id="home">
+  <!-- <div class="hero-badge">
+    <span class="dot"></span>
+    <span data-lang-key="hero_badge">AI-Based Early Disease Prediction · Minimal Symptoms</span>
+  </div> -->
+  <h1 data-lang-key="hero_title"><em>AI-Based Early Disease</em><br><span>Prediction Using Minimal Symptoms</span></h1>
+  <p data-lang-key="hero_desc">Enter 2–5 symptoms and receive thoughtful, intelligent health insights powered by AI. We use WHO-aligned data, Ayurvedic wisdom, and calm, reassuring guidance — never alarming language.</p>
+  <div class="hero-btns">
+    <a href="#predict" class="btn-primary-hero"><i class="fas fa-search"></i> <span data-lang-key="hero_cta">Analyze Symptoms</span></a>
+    <a href="#how" class="btn-outline-hero"><i class="fas fa-info-circle"></i> <span data-lang-key="hero_learn">Learn More</span></a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">50+</div><div class="lbl" data-lang-key="stat1">Diseases Covered</div></div>
+    <div class="hero-stat"><div class="num">WHO</div><div class="lbl" data-lang-key="stat2">Data Informed</div></div>
+    <div class="hero-stat"><div class="num">3</div><div class="lbl" data-lang-key="stat3">Languages</div></div>
+    <div class="hero-stat"><div class="num">🤖</div><div class="lbl" data-lang-key="stat4">AI Powered</div></div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section id="how">
+  <div class="container">
+    <!-- <div class="section-label" data-lang-key="how_label">Process</div> -->
+    <h2 class="section-title" data-lang-key="how_title">How MediSense AI Works</h2>
+    <p class="section-desc" data-lang-key="how_desc">Our AI analyzes your symptoms using curated clinical knowledge from WHO, NIH, and trusted medical databases — providing calm, helpful health insights.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">💬</div>
+        <h3 data-lang-key="step1_title">Enter Symptoms</h3>
+        <p data-lang-key="step1_desc">Type or speak 2–5 symptoms. Autocomplete guides you through 200+ recognized clinical symptoms.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">🤖</div>
+        <h3 data-lang-key="step2_title">AI Analysis</h3>
+        <p data-lang-key="step2_desc">Claude AI cross-references your symptoms against WHO-informed disease patterns for accurate, thoughtful predictions.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-icon">🌿</div>
+        <h3 data-lang-key="step3_title">Calm Guidance</h3>
+        <p data-lang-key="step3_desc">Receive condition insights with Ayurvedic suggestions, home remedies, and gentle care recommendations — in reassuring language.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-icon">🏥</div>
+        <h3 data-lang-key="step4_title">Nearby Help</h3>
+        <p data-lang-key="step4_desc">When professional care is recommended, we gently guide you to nearby hospitals and doctors using your location.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Symptom Input Section -->
+<section id="predict" style="background:white;">
+  <div class="container">
+    <!-- <div class="section-label" data-lang-key="predict_label">Symptom Checker</div> -->
+    <h2 class="section-title" data-lang-key="predict_title">How are you feeling today?</h2>
+    <p class="section-desc" data-lang-key="predict_desc">Share 2–5 symptoms and our AI will thoughtfully analyze them. We use calm, supportive language — no scary terms.</p>
+
+    <div class="symptom-card" style="margin-top:36px;">
+      <div class="input-group">
+        <i class="fas fa-search input-icon"></i>
+        <input
+          type="text"
+          class="symptom-input"
+          id="symptom-input"
+          placeholder="Type a symptom (e.g., headache, fever, cough...)"
+          autocomplete="off"
+          oninput="handleInput(this.value)"
+          onkeydown="handleKeydown(event)"
+          data-lang-placeholder="input_placeholder"
+        />
+        <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="Voice Input">
+          <i class="fas fa-microphone"></i>
+        </button>
+        <ul class="autocomplete-list" id="autocomplete-list" style="display:none;"></ul>
+      </div>
+
+      <div class="tags-wrap" id="tags-wrap">
+        <span style="font-size:13px;color:var(--text-light);align-self:center;" id="tags-placeholder" data-lang-key="tags_placeholder">Your symptoms will appear here...</span>
+      </div>
+
+      <div class="predict-controls">
+        <button class="btn-predict" id="predict-btn" onclick="runPrediction()" disabled>
+          <i class="fas fa-brain"></i> <span data-lang-key="predict_btn">Analyze Symptoms</span>
+        </button>
+        <button class="btn-clear" onclick="clearAll()" data-lang-key="clear_btn">Clear All</button>
+        <span class="symptom-hint" id="hint-text">
+          <i class="fas fa-info-circle"></i>
+          <span data-lang-key="hint">Add <span style="color:var(--primary);font-weight:600">2–5</span> symptoms to begin</span>
+        </span>
+      </div>
+
+      <div class="safe-disclaimer">
+        <i class="fas fa-shield-alt"></i>
+        <span data-lang-key="disclaimer">This tool provides supportive health information only — not a medical diagnosis. Please always consult a qualified healthcare professional for personal medical advice.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Loading -->
+<div id="loading" style="display:none; text-align:center; padding:60px 2rem;">
+  <div class="loader-ring"></div>
+  <p class="loading-text">Analyzing your symptoms with AI</p>
+  <p class="loading-step" id="loading-step">Consulting clinical knowledge base...</p>
+</div>
+
+<!-- Results Section -->
+<section id="results" style="display:none; background:var(--bg);">
+  <div class="container">
+    <div class="results-header">
+      <div>
+        <div class="section-label" data-lang-key="results_label">Analysis Complete</div>
+        <h2 class="section-title" data-lang-key="results_title">Health Insights</h2>
+      </div>
+      <div class="results-meta" id="results-meta"></div>
+    </div>
+    <div class="results-grid" id="results-grid"></div>
+    <div class="safe-disclaimer" style="margin-top:24px;">
+      <i class="fas fa-user-md"></i>
+      <span>These insights are generated by AI to help you understand possible health considerations. For a proper evaluation, please consult a licensed medical professional. This is not a substitute for professional medical care.</span>
+    </div>
+  </div>
+</section>
+
+<!-- Ayurvedic Section -->
+<section id="ayurvedic">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;" class="ayur-intro">
+      <div>
+        <!-- <div class="section-label" data-lang-key="ayur_label">Traditional Wisdom</div> -->
+        <h2 class="section-title" data-lang-key="ayur_title">Ayurvedic &amp; Home Remedies</h2>
+        <p style="color:var(--text-muted);line-height:1.7;margin-bottom:16px;" data-lang-key="ayur_desc">Explore time-tested Ayurvedic wisdom and simple home remedies that support your wellbeing. These are complementary suggestions from WHO-recognized traditional medicine — always combine with modern medical care.</p>
+        <div class="disclaimer-tag">
+          <i class="fas fa-leaf"></i>
+          <span data-lang-key="ayur_note">Supportive care only — not a replacement for medical treatment</span>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:80px;">🌿</div>
+    </div>
+    <div class="ayur-grid">
+      <div class="ayur-card">
+        <div class="ayur-emoji">🌱</div>
+        <h4 data-lang-key="tulsi_title">Tulsi (Holy Basil)</h4>
+        <p data-lang-key="tulsi_desc">Powerful adaptogen for respiratory health. Tulsi tea may help with cough, fever, and cold. Boil 10–15 leaves in water for 10 minutes.</p>
+      </div>
+      <div class="ayur-card">
+        <div class="ayur-emoji">🍯</div>
+        <h4 data-lang-key="honey_title">Honey &amp; Ginger</h4>
+        <p data-lang-key="honey_desc">A natural soothing combination. Helpful for sore throat, indigestion, and mild nausea. Mix 1 tsp ginger juice with 1 tsp raw honey.</p>
+      </div>
+      <div class="ayur-card">
+        <div class="ayur-emoji">🌡️</div>
+        <h4 data-lang-key="steam_title">Steam Inhalation</h4>
+        <p data-lang-key="steam_desc">Eucalyptus or peppermint oil steam may relieve congestion and sinus discomfort. Inhale for 10–15 minutes, twice daily.</p>
+      </div>
+      <div class="ayur-card">
+        <div class="ayur-emoji">🧄</div>
+        <h4 data-lang-key="garlic_title">Garlic Remedy</h4>
+        <p data-lang-key="garlic_desc">Allicin in garlic has antimicrobial properties. Raw garlic with warm water may support immunity and help manage blood pressure naturally.</p>
+      </div>
+      <div class="ayur-card">
+        <div class="ayur-emoji">💧</div>
+        <h4 data-lang-key="water_title">Hydration Therapy</h4>
+        <p data-lang-key="water_desc">Drinking 8–10 glasses of water daily helps support kidney function, reduce mild fever, and maintain overall body metabolism.</p>
+      </div>
+      <div class="ayur-card">
+        <div class="ayur-emoji">🧘</div>
+        <h4 data-lang-key="yoga_title">Pranayama &amp; Yoga</h4>
+        <p data-lang-key="yoga_desc">Anulom-vilom and bhramari pranayama may reduce stress, improve lung function, and support cardiovascular health naturally.</p>
+      </div>
+      <div class="ayur-card">
+        <div class="ayur-emoji">🌾</div>
+        <h4 data-lang-key="triphala_title">Triphala</h4>
+        <p data-lang-key="triphala_desc">An Ayurvedic formula of three fruits that supports digestive health and gentle detoxification. Take with warm water under guidance.</p>
+      </div>
+      <div class="ayur-card">
+        <div class="ayur-emoji">🌰</div>
+        <h4 data-lang-key="ashwagandha_title">Ashwagandha</h4>
+        <p data-lang-key="ashwagandha_desc">Adaptogenic herb that may help reduce stress and support immunity and energy levels. Consult a doctor regarding appropriate use.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Emergency Care Guidance Section -->
+<section id="emergency-care" style="background:white;">
+  <div class="container">
+    <h2 class="section-title">Basic Emergency Care</h2>
+    <p class="section-desc">Simple first-aid guidance for common situations while awaiting professional help. In any genuine emergency, please call 112 immediately.</p>
+    <div class="emergency-care-grid" style="margin-top:36px;">
+      <div class="ecare-card">
+        <div class="ecare-icon">🫀</div>
+        <h4>Chest Discomfort</h4>
+        <p>If someone experiences sudden chest tightness or discomfort that doesn't improve within a few minutes, please seek immediate care.</p>
+        <ul class="ecare-steps">
+          <li>Call 112 right away</li>
+          <li>Have the person sit or lie comfortably</li>
+          <li>Loosen any tight clothing</li>
+          <li>Stay calm and reassure them</li>
+          <li>Do not give food or water</li>
+        </ul>
+      </div>
+      <div class="ecare-card">
+        <div class="ecare-icon">🌡️</div>
+        <h4>High Fever</h4>
+        <p>A fever over 104°F / 40°C, or any fever in a child under 3 months, warrants prompt medical attention.</p>
+        <ul class="ecare-steps">
+          <li>Keep the person hydrated</li>
+          <li>Apply cool (not cold) compress to forehead</li>
+          <li>Remove heavy clothing</li>
+          <li>Paracetamol as directed on package</li>
+          <li>Seek care if fever persists over 3 days</li>
+        </ul>
+      </div>
+      <div class="ecare-card">
+        <div class="ecare-icon">😮‍💨</div>
+        <h4>Breathing Difficulty</h4>
+        <p>If someone is struggling to breathe, acting quickly and calmly is important. Call for help first.</p>
+        <ul class="ecare-steps">
+          <li>Call 112 immediately</li>
+          <li>Help person sit upright — leaning forward slightly</li>
+          <li>Encourage slow, steady breaths</li>
+          <li>Use prescribed inhaler if available</li>
+          <li>Open windows for fresh air</li>
+        </ul>
+      </div>
+      <div class="ecare-card">
+        <div class="ecare-icon">🤕</div>
+        <h4>Head Injury</h4>
+        <p>Any head injury with confusion, vomiting, or loss of consciousness should be evaluated by a doctor promptly.</p>
+        <ul class="ecare-steps">
+          <li>Keep person still and calm</li>
+          <li>Do not move if spinal injury suspected</li>
+          <li>Apply gentle pressure to bleeding wounds</li>
+          <li>Keep them awake and talking</li>
+          <li>Call 112 for significant injuries</li>
+        </ul>
+      </div>
+      <div class="ecare-card">
+        <div class="ecare-icon">🍽️</div>
+        <h4>Food-Related Illness</h4>
+        <p>Vomiting and diarrhea can lead to dehydration. Most cases improve with rest and fluids.</p>
+        <ul class="ecare-steps">
+          <li>Sip water, ORS, or coconut water</li>
+          <li>Rest and avoid solid food initially</li>
+          <li>BRAT diet: banana, rice, applesauce, toast</li>
+          <li>Avoid dairy and spicy foods</li>
+          <li>Seek care if symptoms persist 48+ hours</li>
+        </ul>
+      </div>
+      <div class="ecare-card">
+        <div class="ecare-icon">🏥</div>
+        <h4>When to Go to Hospital</h4>
+        <p>Some situations always need in-person medical evaluation. Trust your instincts — if something feels wrong, please seek help.</p>
+        <ul class="ecare-steps">
+          <li>Difficulty breathing or speaking</li>
+          <li>Uncontrolled bleeding</li>
+          <li>Sudden severe headache</li>
+          <li>Confusion or loss of consciousness</li>
+          <li>Symptoms in infants, elderly, or immunocompromised</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Hospital Finder -->
+    <div style="background:linear-gradient(135deg,#f0fdf4,#eff6ff);border-radius:var(--radius);padding:32px;margin-top:40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;border:1px solid #a7f3d0;">
+      <div>
+        <h3 style="font-size:20px;margin-bottom:8px;"><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:8px;"></i>Find a Hospital Near You</h3>
+        <p style="color:var(--text-muted);font-size:14px;">We'll use your location to show nearby hospitals and clinics. Your data stays on your device.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button onclick="findHospital()" style="background:var(--primary);color:white;border:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+          <i class="fas fa-hospital"></i> Find Hospitals
+        </button>
+        <button onclick="callEmergency()" style="background:white;color:var(--primary);border:1.5px solid var(--primary);padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+          <i class="fas fa-phone"></i> Call 112
+        </button>
+        <button onclick="findDoctor()" style="background:white;color:var(--blue);border:1.5px solid var(--blue);padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+          <i class="fas fa-user-md"></i> Find a Doctor
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- References Section -->
+<section id="references">
+  <div class="container">
+    <h2 class="section-title" data-lang-key="ref_title">Trusted Medical References</h2>
+    <p class="section-desc" data-lang-key="ref_desc">Our disease knowledge is informed by globally recognized health organizations and curated, regularly updated medical research databases.</p>
+    <div class="ref-grid">
+      <a class="ref-card" href="https://www.who.int" target="_blank">
+        <div class="ref-logo">🌍</div>
+        <h4>WHO</h4>
+        <p>World Health Organization — Global health standards and disease classifications (ICD-11)</p>
+      </a>
+      <a class="ref-card" href="https://www.nih.gov" target="_blank">
+        <div class="ref-logo">🔬</div>
+        <h4>NIH</h4>
+        <p>National Institutes of Health — Medical research and evidence-based clinical guidelines</p>
+      </a>
+      <a class="ref-card" href="https://www.mayoclinic.org" target="_blank">
+        <div class="ref-logo">🏥</div>
+        <h4>Mayo Clinic</h4>
+        <p>Patient-centered care information and comprehensive symptom reference library</p>
+      </a>
+      <a class="ref-card" href="https://pubmed.ncbi.nlm.nih.gov" target="_blank">
+        <div class="ref-logo">📄</div>
+        <h4>PubMed</h4>
+        <p>Peer-reviewed biomedical literature and validated research publications</p>
+      </a>
+      <a class="ref-card" href="https://www.cdc.gov" target="_blank">
+        <div class="ref-logo">🛡️</div>
+        <h4>CDC</h4>
+        <p>Centers for Disease Control — Disease prevention and public health guidance</p>
+      </a>
+      <a class="ref-card" href="https://main.mohfw.gov.in" target="_blank">
+        <div class="ref-logo">🇮🇳</div>
+        <h4>MoHFW India</h4>
+        <p>Ministry of Health & Family Welfare — India-specific health guidelines and disease data</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="nav-brand" style="margin-bottom:12px;">
+        <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+        <div>
+          <span class="brand-text" style="color:white;">MediSense AI</span>
+          <span class="brand-sub">Early Disease Prediction</span>
+        </div>
+      </div>
+      <p> AI-powered system for early disease prediction using minimal symptoms. WHO and trusted medical databases. For educational and supportive purposes only.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Features</h4>
+      <a href="#predict">Symptom Checker</a>
+      <a href="#results">Health Insights</a>
+      <a href="#ayurvedic">Ayurvedic Remedies</a>
+      <a href="#emergency-care">Emergency Care Guide</a>
+      <a href="#references">Medical References</a>
+    </div>
+    <div class="footer-col">
+      <h4>Help &amp; Care</h4>
+      <a href="tel:112">Emergency: 112</a>
+      <a href="tel:108">Ambulance: 108</a>
+      <a href="javascript:findHospital()">Find Hospital</a>
+      <a href="javascript:findDoctor()">Find Doctor</a>
+      <a href="tel:9152987821">iCall Mental Health</a>
+    </div>
+    <div class="footer-col">
+      <h4>Conditions Covered</h4>
+      <a href="#">COVID-19, Malaria, TB</a>
+      <a href="#">Diabetes, Hypertension</a>
+      <a href="#">Heart, Respiratory</a>
+      <a href="#">Mental Health, Gut</a>
+      <a href="#">50+ conditions total</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-disclaimer">
+      ℹ️ MEDICAL DISCLAIMER: MediSense AI provides supportive health information only. It does not diagnose or treat any medical condition. Always consult a qualified healthcare professional. In emergencies, call 112 immediately.
+    </p>
+    <p class="footer-copy">© 2026 Future Mind's AI based Early Disease Prediction</p>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ALL SYMPTOMS LIST (for autocomplete)
+// ═══════════════════════════════════════════════════════════
+const allSymptoms = [
+  "fever","cough","headache","fatigue","nausea","vomiting","diarrhea","chills",
+  "body ache","sore throat","runny nose","breathing difficulty","chest pain","chest tightness",
+  "shortness of breath","dizziness","blurred vision","loss of taste","loss of smell",
+  "skin rash","itching","swelling","weight loss","weight gain","excessive thirst",
+  "frequent urination","muscle weakness","joint pain","back pain","neck stiffness",
+  "night sweats","blood in cough","blood in urine","blood in stool","abdominal pain",
+  "stomach pain","bloating","indigestion","loss of appetite","constipation","heartburn",
+  "palpitations","wheezing","mucus","sweating","trembling","confusion","memory loss",
+  "numbness","tingling","vision loss","speech difficulty","face drooping","arm weakness",
+  "loss of balance","severe headache","eye pain","skin blisters","sensitive to light",
+  "sensitive to sound","aura","throbbing pain","burning urination","flank pain",
+  "groin pain","persistent sadness","anxiety","restlessness","mood swings","sleep changes",
+  "concentration problems","hopelessness","paleness","cold hands and feet",
+  "brittle nails","hair loss","slow healing wounds","cycling fever","shivering",
+  "jaw pain","arm pain","nose bleeding","excessive hunger","dry mouth","yellow skin",
+  "yellow eyes","dark urine","pale stool","redness","discharge","ear pain"
+];
+
+// Symptoms that warrant gentle care recommendation
+const attentionSymptoms = [
+  "chest pain","breathing difficulty","shortness of breath","face drooping","arm weakness",
+  "speech difficulty","vision loss","blood in cough","blood in urine","severe headache",
+  "loss of balance","palpitations","chest tightness","confusion"
+];
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let selectedSymptoms = [];
+let currentLang = 'en';
+let recognition = null;
+let isListening = false;
+
+// ═══════════════════════════════════════════════════════════
+// TRANSLATIONS
+// ═══════════════════════════════════════════════════════════
+const translations = {
+  en: {
+    nav_predict:"Predict", nav_how:"How It Works", nav_ayur:"Ayurvedic",
+    nav_emergency:"Emergency Care", nav_ref:"References", nav_check:"Check Symptoms",
+    hero_badge:"AI-Based Early Disease Prediction · Minimal Symptoms",
+    hero_cta:"Analyze Symptoms", hero_learn:"Learn More",
+    predict_label:"Symptom Checker", predict_title:"How are you feeling today?",
+    predict_btn:"Analyze Symptoms", clear_btn:"Clear All",
+    hint:"Add 2–5 symptoms to begin",
+    tags_placeholder:"Your symptoms will appear here...",
+    results_label:"Analysis Complete", results_title:"Health Insights",
+    care_title:"Some of your symptoms may need medical attention",
+    care_sub:"We recommend connecting with a healthcare professional soon. You're not alone — help is close by.",
+    call_btn:"Call 112", hospital_btn:"Nearby Hospitals", consult_btn:"Consult a Doctor",
+    input_placeholder:"Type a symptom (e.g., headache, fever, cough...)",
+    ayur_label:"Traditional Wisdom", ayur_title:"Ayurvedic & Home Remedies",
+    ayur_note:"Supportive care only — not a replacement for medical treatment",
+    disclaimer:"This tool provides supportive health information only — not a medical diagnosis.",
+    ref_label:"Medical Sources", ref_title:"Trusted Medical References",
+    ref_desc:"Our disease knowledge is informed by WHO and trusted medical databases."
+  },
+  hi: {
+    nav_predict:"पूर्वानुमान", nav_how:"यह कैसे काम करता है", nav_ayur:"आयुर्वेदिक",
+    nav_emergency:"आपातकालीन देखभाल", nav_ref:"संदर्भ", nav_check:"लक्षण जांचें",
+    hero_badge:"न्यूनतम लक्षणों से AI-आधारित प्रारंभिक रोग पूर्वानुमान",
+    hero_cta:"लक्षणों का विश्लेषण करें", hero_learn:"अधिक जानें",
+    predict_label:"लक्षण जांचकर्ता", predict_title:"आज आप कैसा महसूस कर रहे हैं?",
+    predict_btn:"विश्लेषण करें", clear_btn:"सब हटाएं",
+    hint:"विश्लेषण शुरू करने के लिए 2–5 लक्षण जोड़ें",
+    tags_placeholder:"आपके लक्षण यहाँ दिखाई देंगे...",
+    results_label:"विश्लेषण पूर्ण", results_title:"स्वास्थ्य जानकारी",
+    care_title:"आपके कुछ लक्षणों पर ध्यान देने की जरूरत है",
+    care_sub:"हम अनुशंसा करते हैं कि आप जल्द ही किसी स्वास्थ्य विशेषज्ञ से मिलें।",
+    call_btn:"112 पर कॉल करें", hospital_btn:"नजदीकी अस्पताल", consult_btn:"डॉक्टर से परामर्श",
+    input_placeholder:"लक्षण टाइप करें (जैसे सिरदर्द, बुखार, खांसी...)",
+    ayur_label:"पारंपरिक ज्ञान", ayur_title:"आयुर्वेदिक और घरेलू उपचार",
+    ayur_note:"केवल सहायक देखभाल — चिकित्सा उपचार का विकल्प नहीं"
+  },
+  mr: {
+    nav_predict:"अंदाज", nav_how:"हे कसे कार्य करते", nav_ayur:"आयुर्वेदिक",
+    nav_emergency:"आपत्कालीन काळजी", nav_ref:"संदर्भ", nav_check:"लक्षणे तपासा",
+    hero_badge:"किमान लक्षणांद्वारे AI-आधारित लवकर रोग अंदाज",
+    hero_cta:"लक्षणांचे विश्लेषण करा", hero_learn:"अधिक जाणा",
+    predict_label:"लक्षण तपासनीस", predict_title:"आज तुम्हाला कसे वाटत आहे?",
+    predict_btn:"विश्लेषण करा", clear_btn:"सर्व साफ करा",
+    hint:"विश्लेषण सुरू करण्यासाठी 2–5 लक्षणे जोडा",
+    tags_placeholder:"तुमची लक्षणे येथे दिसतील...",
+    results_label:"विश्लेषण पूर्ण", results_title:"आरोग्य माहिती",
+    care_title:"तुमच्या काही लक्षणांकडे लक्ष देणे आवश्यक आहे",
+    care_sub:"आम्ही शिफारस करतो की तुम्ही लवकरच आरोग्य तज्ज्ञाशी संपर्क करा।",
+    call_btn:"112 वर कॉल करा", hospital_btn:"जवळचे रुग्णालय", consult_btn:"डॉक्टरांशी सल्लामसलत",
+    input_placeholder:"लक्षण टाइप करा (उदा. डोकेदुखी, ताप, खोकला...)",
+    ayur_label:"पारंपरिक ज्ञान", ayur_title:"आयुर्वेदिक आणि घरगुती उपाय",
+    ayur_note:"केवळ सहाय्यक काळजी — वैद्यकीय उपचाराचा पर्याय नाही"
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// SYMPTOM INPUT
+// ═══════════════════════════════════════════════════════════
+function handleInput(val) {
+  const list = document.getElementById('autocomplete-list');
+  if (!val.trim() || val.length < 2) { list.style.display='none'; return; }
+  const matches = allSymptoms.filter(s => s.toLowerCase().includes(val.toLowerCase())).slice(0,8);
+  if (!matches.length) { list.style.display='none'; return; }
+  list.innerHTML = matches.map(s =>
+    `<li onclick="addSymptom('${s}')"><i class="fas fa-plus" style="font-size:11px;color:var(--primary);"></i>${s.charAt(0).toUpperCase()+s.slice(1)}</li>`
+  ).join('');
+  list.style.display = 'block';
+}
+
+function handleKeydown(e) {
+  if (e.key==='Enter') { const v=e.target.value.trim(); if(v) addSymptom(v); }
+  if (e.key==='Escape') document.getElementById('autocomplete-list').style.display='none';
+}
+
+function addSymptom(sym) {
+  sym = sym.toLowerCase().trim();
+  if (!sym) return;
+  if (selectedSymptoms.length >= 5) { showToast('Maximum 5 symptoms allowed','warning'); return; }
+  if (selectedSymptoms.includes(sym)) { showToast('Already added','info'); return; }
+  selectedSymptoms.push(sym);
+  document.getElementById('symptom-input').value='';
+  document.getElementById('autocomplete-list').style.display='none';
+  renderTags();
+  checkAttention();
+}
+
+function removeSymptom(sym) {
+  selectedSymptoms = selectedSymptoms.filter(s=>s!==sym);
+  renderTags();
+  checkAttention();
+}
+
+function renderTags() {
+  const wrap=document.getElementById('tags-wrap');
+  const ph=document.getElementById('tags-placeholder');
+  const btn=document.getElementById('predict-btn');
+  if (!selectedSymptoms.length) {
+    wrap.innerHTML=''; wrap.appendChild(ph); ph.style.display=''; btn.disabled=true; return;
+  }
+  ph.style.display='none';
+  wrap.innerHTML=selectedSymptoms.map(s=>
+    `<div class="tag"><i class="fas fa-circle" style="font-size:6px;margin-right:2px;"></i>${s.charAt(0).toUpperCase()+s.slice(1)}<button class="tag-remove" onclick="removeSymptom('${s}')">&times;</button></div>`
+  ).join('')+`<span style="font-size:12px;color:var(--text-light);margin-left:4px;align-self:center;">${selectedSymptoms.length}/5</span>`;
+  wrap.appendChild(ph);
+  btn.disabled = selectedSymptoms.length<2;
+}
+
+function clearAll() {
+  selectedSymptoms=[];
+  document.getElementById('symptom-input').value='';
+  document.getElementById('autocomplete-list').style.display='none';
+  document.getElementById('results').style.display='none';
+  document.getElementById('care-banner').style.display='none';
+  renderTags();
+}
+
+// ═══════════════════════════════════════════════════════════
+// GENTLE ATTENTION CHECK (replaces alarming emergency detection)
+// ═══════════════════════════════════════════════════════════
+function checkAttention() {
+  const needsAttention = selectedSymptoms.some(s =>
+    attentionSymptoms.some(a => s.includes(a.split(' ')[0]) || a.includes(s) || s.includes(a))
+  );
+  const banner = document.getElementById('care-banner');
+  banner.style.display = needsAttention ? 'block' : 'none';
+  if (needsAttention) window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOCATION-BASED HELPERS
+// ═══════════════════════════════════════════════════════════
+function findHospital() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const {latitude:lat, longitude:lng} = pos.coords;
+      window.open(`https://www.google.com/maps/search/hospitals+near+me/@${lat},${lng},14z`,'_blank');
+    }, () => {
+      window.open('https://www.google.com/maps/search/hospitals+near+me','_blank');
+    });
+  } else {
+    window.open('https://www.google.com/maps/search/hospitals+near+me','_blank');
+  }
+}
+
+function findDoctor() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const {latitude:lat, longitude:lng} = pos.coords;
+      window.open(`https://www.google.com/maps/search/doctors+clinic+near+me/@${lat},${lng},14z`,'_blank');
+    }, () => {
+      window.open('https://www.google.com/maps/search/doctors+clinic+near+me','_blank');
+    });
+  } else {
+    window.open('https://www.google.com/maps/search/doctors+clinic+near+me','_blank');
+  }
+}
+
+function callEmergency() {
+  showToast('Connecting to Emergency: 112','info');
+  window.open('tel:112');
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI PREDICTION ENGINE (Claude API)
+// ═══════════════════════════════════════════════════════════
+async function runPrediction() {
+  if (selectedSymptoms.length < 2) return;
+
+  document.getElementById('results').style.display='none';
+  document.getElementById('loading').style.display='block';
+  document.getElementById('predict').scrollIntoView({behavior:'smooth', block:'end'});
+
+  const steps = [
+    "Consulting clinical knowledge base...",
+    "Analyzing symptom patterns...",
+    "Cross-referencing WHO disease data...",
+    "Preparing personalized health insights...",
+    "Finalizing Ayurvedic suggestions..."
+  ];
+  let stepIdx = 0;
+  const stepEl = document.getElementById('loading-step');
+  const stepTimer = setInterval(() => {
+    stepIdx = (stepIdx+1) % steps.length;
+    stepEl.textContent = steps[stepIdx];
+  }, 1200);
+
+  try {
+    const prompt = `You are a calm, reassuring medical AI assistant helping users understand possible health conditions based on minimal symptoms. Your job is to provide supportive, non-alarming health insights.
+
+User's symptoms: ${selectedSymptoms.join(', ')}
+
+Return a JSON array of 3-5 possible conditions. Each object must have exactly these fields:
+- name: condition name (string)
+- icon: single relevant emoji
+- iconBg: light pastel hex color
+- matchLevel: "Close Match" | "Possible Match" | "Worth Noting"
+- matchClass: "match-close" | "match-possible" | "match-unlikely"
+- needsCare: true | false (true = professional care recommended, but NEVER say 'critical' or 'serious')
+- description: 1-2 calm, factual sentences about the condition
+- calmAdvice: reassuring advice sentence (NEVER use words: critical, serious, severe, dangerous, urgent, emergency in this field)
+- doctor: which doctor type to consult (string)
+- tests: array of 3-4 relevant tests (strings)
+- ayurvedic: array of 3-4 Ayurvedic remedies with brief instructions (strings)
+- home: array of 3-4 simple home care tips (strings)
+- emergencyCare: 1 sentence gentle guidance if this is a condition needing prompt care, else empty string
+
+Rules:
+- NEVER use alarming terms like "critical", "serious", "dangerous", "severe", "urgent" in descriptions or advice
+- NEVER show probability percentages
+- Use calm, supportive language always
+- Base suggestions on WHO/NIH/Mayo Clinic knowledge
+- For high-risk conditions (heart, stroke, etc.), set needsCare=true and include gentle encouragement to see a doctor
+
+Respond ONLY with the JSON array. No markdown, no explanation.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    clearInterval(stepTimer);
+
+    const text = data.content.map(b=>b.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const predictions = JSON.parse(clean);
+
+    document.getElementById('loading').style.display='none';
+    renderResults(predictions);
+
+  } catch(err) {
+    clearInterval(stepTimer);
+    document.getElementById('loading').style.display='none';
+    // Fallback to local prediction if API fails
+    const fallback = buildFallbackPrediction(selectedSymptoms);
+    renderResults(fallback);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FALLBACK PREDICTION (if AI unavailable)
+// ═══════════════════════════════════════════════════════════
+function buildFallbackPrediction(symptoms) {
+  const sym = symptoms.join(' ').toLowerCase();
+  const results = [];
+
+  if (sym.includes('fever') || sym.includes('cough') || sym.includes('cold')) {
+    results.push({
+      name: "Influenza / Common Cold",
+      icon: "🤧", iconBg: "#e0f2fe",
+      matchLevel: "Close Match", matchClass: "match-close",
+      needsCare: false,
+      description: "A common viral respiratory illness that usually improves with rest and care over several days.",
+      calmAdvice: "Rest well, stay hydrated, and your body should recover in 5–7 days.",
+      doctor: "General Physician (GP)",
+      tests: ["Rapid Influenza Test","Throat swab","Temperature monitoring"],
+      ayurvedic: ["Tulsi-ginger-honey tea 3x daily","Steam inhalation with eucalyptus","Turmeric milk at bedtime"],
+      home: ["Complete rest for 5–7 days","Warm soups and herbal teas","Honey and lemon in warm water","Use a humidifier"],
+      emergencyCare: ""
+    });
+  }
+
+  if (sym.includes('headache') || sym.includes('nausea') || sym.includes('dizziness')) {
+    results.push({
+      name: "Migraine or Tension Headache",
+      icon: "🧠", iconBg: "#ede9fe",
+      matchLevel: "Possible Match", matchClass: "match-possible",
+      needsCare: false,
+      description: "Recurring headaches are common and often linked to stress, dehydration, or tension.",
+      calmAdvice: "Rest in a quiet, dim room. Staying hydrated and managing stress often helps significantly.",
+      doctor: "General Physician or Neurologist",
+      tests: ["Blood pressure check","MRI Brain if recurrent","Neurological evaluation"],
+      ayurvedic: ["Peppermint oil on temples","Brahmi tea","Cold compress on forehead"],
+      home: ["Rest in a dark, quiet room","Drink plenty of water","Apply cold or warm compress","Track potential triggers"],
+      emergencyCare: ""
+    });
+  }
+
+  if (sym.includes('chest') || sym.includes('breath') || sym.includes('palpitation')) {
+    results.push({
+      name: "Respiratory or Cardiac Consideration",
+      icon: "🫀", iconBg: "#fce7f3",
+      matchLevel: "Worth Noting", matchClass: "match-possible",
+      needsCare: true,
+      description: "Chest-related symptoms benefit from a professional evaluation to identify the cause and rule out anything that needs attention.",
+      calmAdvice: "We'd gently encourage you to connect with a doctor soon so they can properly evaluate how you're feeling.",
+      doctor: "Cardiologist or General Physician",
+      tests: ["ECG","Blood pressure monitoring","Chest X-ray","Blood oxygen check"],
+      ayurvedic: ["Arjuna bark decoction (cardioprotective)","Garlic with warm water","Brahmi for calming"],
+      home: ["Sit in an upright, comfortable position","Practice slow, calm breathing","Avoid caffeine and smoking","Rest and avoid exertion"],
+      emergencyCare: "Please consider seeing a doctor today. If symptoms feel intense, calling 112 is always the right choice."
+    });
+  }
+
+  if (!results.length) {
+    results.push({
+      name: "General Wellness Check Recommended",
+      icon: "🏥", iconBg: "#e8f7f1",
+      matchLevel: "Worth Noting", matchClass: "match-unlikely",
+      needsCare: false,
+      description: "Your symptoms have some overlap with common conditions. A check-up would help identify the exact cause.",
+      calmAdvice: "Rest, stay hydrated, and monitor how you feel. A visit to your doctor can provide clarity.",
+      doctor: "General Physician (GP)",
+      tests: ["General health check-up","Blood count","Blood pressure","Temperature"],
+      ayurvedic: ["Tulsi tea daily","Ashwagandha for general wellness","Triphala for digestion"],
+      home: ["Rest and hydrate well","Light, nutritious meals","Monitor temperature","Avoid strenuous activity"],
+      emergencyCare: ""
+    });
+  }
+
+  return results;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════════════════════════
+function renderResults(predictions) {
+  const section = document.getElementById('results');
+  const grid = document.getElementById('results-grid');
+  const meta = document.getElementById('results-meta');
+
+  meta.innerHTML = `<i class="fas fa-clock"></i> ${selectedSymptoms.length} symptom${selectedSymptoms.length>1?'s':''} analyzed · ${predictions.length} conditions considered · ${new Date().toLocaleTimeString()}`;
+
+  grid.innerHTML = predictions.map((p, i) => `
+    <div class="disease-card" style="animation-delay:${i*0.1}s">
+      <div class="card-header">
+        <div class="disease-icon" style="background:${p.iconBg||'#e8f7f1'}">${p.icon||'🏥'}</div>
+        <div class="card-title">
+          <h3>${p.name}</h3>
+          <span class="match-badge ${p.matchClass||'match-unlikely'}">
+            ${p.matchLevel||'Worth Noting'}
+          </span>
+        </div>
+      </div>
+
+      ${p.needsCare ? `<div class="card-attention"><i class="fas fa-hand-holding-heart" style="margin-top:2px;flex-shrink:0;"></i><span>We gently recommend speaking with a doctor about these symptoms.</span></div>` : ''}
+
+      <div class="card-body">
+        <p>${p.description}</p>
+        <div class="info-row"><i class="fas fa-comment-medical"></i><span>${p.calmAdvice}</span></div>
+        ${p.doctor ? `<div class="info-row"><i class="fas fa-user-md"></i><span>Who to see: ${p.doctor}</span></div>` : ''}
+        ${p.emergencyCare ? `<div class="info-row" style="color:var(--calm);"><i class="fas fa-heart" style="color:var(--calm);"></i><span>${p.emergencyCare}</span></div>` : ''}
+      </div>
+
+      ${p.needsCare ? `
+      <div class="hospital-cta">
+        <p><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:6px;"></i>Find care near you</p>
+        <div class="hospital-cta-btns">
+          <button class="btn-sm-hospital btn-sm-map" onclick="findHospital()">
+            <i class="fas fa-hospital"></i> Hospital Map
+          </button>
+          <button class="btn-sm-hospital btn-sm-call" onclick="findDoctor()">
+            <i class="fas fa-user-md"></i> Find Doctor
+          </button>
+        </div>
+      </div>` : ''}
+
+      <div class="card-tabs">
+        <button class="card-tab active" onclick="switchTab(this,'tests-${i}')">🧪 Tests</button>
+        <button class="card-tab" onclick="switchTab(this,'ayur-${i}')">🌿 Ayurvedic</button>
+        <button class="card-tab" onclick="switchTab(this,'home-${i}')">🏠 Home Care</button>
+      </div>
+
+      <div id="tests-${i}" class="card-tab-content active">
+        ${(p.tests||[]).map(t=>`<div class="remedy-item"><span class="remedy-icon">🔬</span><span>${t}</span></div>`).join('')}
+      </div>
+
+      <div id="ayur-${i}" class="card-tab-content">
+        ${(p.ayurvedic||[]).map(r=>`<div class="remedy-item"><span class="remedy-icon">🌱</span><span>${r}</span></div>`).join('')}
+        <div class="disclaimer-tag"><i class="fas fa-info-circle"></i> Supportive care only</div>
+      </div>
+
+      <div id="home-${i}" class="card-tab-content">
+        ${(p.home||[]).map(r=>`<div class="remedy-item"><span class="remedy-icon">🏠</span><span>${r}</span></div>`).join('')}
+        <div class="disclaimer-tag"><i class="fas fa-info-circle"></i> Not a substitute for medical treatment</div>
+      </div>
+    </div>
+  `).join('');
+
+  section.style.display='block';
+  section.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function switchTab(btn, contentId) {
+  const card=btn.closest('.disease-card');
+  card.querySelectorAll('.card-tab').forEach(t=>t.classList.remove('active'));
+  card.querySelectorAll('.card-tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  const content=document.getElementById(contentId);
+  if(content) content.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// VOICE INPUT
+// ═══════════════════════════════════════════════════════════
+function toggleVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { showToast('Voice input not supported in this browser','warning'); return; }
+  const btn = document.getElementById('voice-btn');
+  if (isListening) {
+    recognition && recognition.stop();
+    isListening=false; btn.classList.remove('listening');
+    btn.innerHTML='<i class="fas fa-microphone"></i>'; return;
+  }
+  recognition = new SpeechRecognition();
+  recognition.lang = currentLang==='hi' ? 'hi-IN' : currentLang==='mr' ? 'mr-IN' : 'en-US';
+  recognition.continuous=false; recognition.interimResults=false;
+  recognition.onstart = () => {
+    isListening=true; btn.classList.add('listening');
+    btn.innerHTML='<i class="fas fa-stop"></i>';
+    showToast('🎤 Listening... speak your symptom','info');
+  };
+  recognition.onresult = (e) => {
+    const t=e.results[0][0].transcript.toLowerCase().trim();
+    document.getElementById('symptom-input').value=t;
+    handleInput(t);
+    setTimeout(()=>addSymptom(t),300);
+  };
+  recognition.onerror = ()=>showToast('Voice input error. Please try typing.','warning');
+  recognition.onend = () => { isListening=false; btn.classList.remove('listening'); btn.innerHTML='<i class="fas fa-microphone"></i>'; };
+  recognition.start();
+}
+
+// ═══════════════════════════════════════════════════════════
+// LANGUAGE SUPPORT
+// ═══════════════════════════════════════════════════════════
+function changeLanguage(lang) {
+  currentLang=lang;
+  const t=translations[lang]||translations.en;
+  document.querySelectorAll('[data-lang-key]').forEach(el=>{
+    const k=el.getAttribute('data-lang-key');
+    if(t[k]) el.innerHTML=t[k];
+  });
+  document.querySelectorAll('[data-lang-placeholder]').forEach(el=>{
+    const k=el.getAttribute('data-lang-placeholder');
+    if(t[k]) el.placeholder=t[k];
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+function showToast(msg, type='info') {
+  const colors={info:'#1a4fa0',warning:'#d97706',success:'#1a6b4a'};
+  const toast=document.createElement('div');
+  toast.style.cssText=`position:fixed;bottom:24px;right:24px;background:${colors[type]||colors.info};color:white;padding:12px 20px;border-radius:10px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.15);animation:toastIn 0.3s ease-out;font-family:'DM Sans',sans-serif;max-width:300px;`;
+  toast.textContent=msg;
+  document.body.appendChild(toast);
+  setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateY(10px)';toast.style.transition='all 0.3s';setTimeout(()=>toast.remove(),300);},3000);
+}
+
+function toggleNav() {
+  const links=document.querySelector('.nav-links');
+  links.style.display=links.style.display==='flex'?'none':'flex';
+}
+
+// Close autocomplete on outside click
+document.addEventListener('click', e=>{
+  if (!e.target.closest('.input-group')) document.getElementById('autocomplete-list').style.display='none';
+});
+
+// Toast animation
+const style=document.createElement('style');
+style.textContent=`@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`;
+document.head.appendChild(style);
+
+// Initialize
+renderTags();
+</script>
+</body>
+</html>
